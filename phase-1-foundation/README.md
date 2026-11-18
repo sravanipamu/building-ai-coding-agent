@@ -29,25 +29,57 @@ python -m agent.cli                     # start chatting
 What happens when you type **"What is Python?"**:
 
 ```
- ① You type "What is Python?"
-        ▼
- ② cli.py        Is it a /command? → run it, no AI call
-                 Otherwise → add it to the conversation list
-        ▼
- ③ ollama.py     Adds the system prompt at the front, sends everything to Ollama
-        ▼
- ④ Ollama        The model writes the answer piece by piece: "Python" " is" " a" ...
-        ▼
- ⑤ ollama.py     Passes each piece on as a "text" event, then a final "done" event
-        ▼
- ⑥ streaming.py  Prints each piece the moment it arrives
-        ▼
- ⑦ inspector.py  Records exactly what was sent and received (see it with /inspect)
-        ▼
- ⑧ cli.py        Saves the answer to the conversation list → ready for your next question
+ ┌───────────────┐       ┌───────────────┐       ┌───────────────┐       ┌───────────────┐
+ │      USER     │       │      CLI      │       │    PROVIDER   │       │      LLM      │
+ │   (terminal)  │       │    (cli.py)   │       │  (ollama.py)  │       │    (Ollama)   │
+ └───────┬───────┘       └───────┬───────┘       └───────┬───────┘       └───────┬───────┘
+         │                       │                       │                       │
+         │ 1. types query        │                       │                       │
+         │    "What is Python?"  │                       │                       │
+         │──────────────────────▶│                       │                       │
+         │                       │                       │                       │
+         │                       │ 2. /command? NO       │                       │
+         │                       │    add to messages    │                       │
+         │                       │                       │                       │
+         │                       │ 3. messages           │                       │
+         │                       │──────────────────────▶│                       │
+         │                       │                       │                       │
+         │                       │                       │ 4. add system prompt  │
+         │                       │                       │    at the front       │
+         │                       │                       │                       │
+         │                       │                       │ 5. system + messages  │
+         │                       │                       │──────────────────────▶│
+         │                       │                       │                       │
+         │                       │                       │ 6. answer in pieces   │
+         │                       │                       │    "Python" " is" ... │
+         │                       │                       │◀──────────────────────│
+         │                       │                       │                       │
+         │                       │ 7. each piece         │                       │
+         │                       │◀──────────────────────│                       │
+         │                       │                       │                       │
+         │ 8. prints it live     │                       │                       │
+         │    (streaming.py)     │                       │                       │
+         │◀──────────────────────│                       │                       │
+         │                       │                       │                       │
+         │                       │                       │ 9. done               │
+         │                       │                       │◀──────────────────────│
+         │                       │                       │                       │
+         │                       │ 10. full answer       │                       │
+         │                       │◀──────────────────────│                       │
+         │                       │                       │                       │
+         │                       │                       │ 11. inspector records │
+         │                       │                       │     input + output    │
+         │                       │                       │                       │
+         │                       │ 12. save answer       │                       │
+         │                       │     to messages       │                       │
+         │                       │     ready for next    │                       │
+         │                       │                       │                       │
+         ▼                       ▼                       ▼                       ▼
 ```
 
-What actually gets sent to the model at step ③:
+Steps 6 to 8 repeat for every piece, so you see the answer appear word by word instead of waiting for the whole thing.
+
+What actually gets sent to the model at step 5:
 
 ```python
 [
