@@ -24,23 +24,39 @@ python -m agent.cli                     # start chatting
 
 **Commands:** `/help` · `/model` · `/clear` (forget the chat) · `/inspect` · `/clear-inspect` · `/quit`
 
-## How it works
+## Data flow
+
+What happens when you type **"What is Python?"**:
 
 ```
-You type a question
-   ▼
-cli.py        adds it to the conversation and sends it on
-   ▼
-ollama.py     adds the system prompt and sends everything to the local model
-   ▼
-Ollama        writes the answer piece by piece
-   ▼
-streaming.py  prints each piece on screen as it arrives
-   ▼
-cli.py        saves the answer, so the next question has context
+ ① You type "What is Python?"
+        ▼
+ ② cli.py        Is it a /command? → run it, no AI call
+                 Otherwise → add it to the conversation list
+        ▼
+ ③ ollama.py     Adds the system prompt at the front, sends everything to Ollama
+        ▼
+ ④ Ollama        The model writes the answer piece by piece: "Python" " is" " a" ...
+        ▼
+ ⑤ ollama.py     Passes each piece on as a "text" event, then a final "done" event
+        ▼
+ ⑥ streaming.py  Prints each piece the moment it arrives
+        ▼
+ ⑦ inspector.py  Records exactly what was sent and received (see it with /inspect)
+        ▼
+ ⑧ cli.py        Saves the answer to the conversation list → ready for your next question
 ```
 
-**The key trick:** an LLM remembers nothing. The agent sends the **whole conversation** every time. Its "memory" is just a Python list.
+What actually gets sent to the model at step ③:
+
+```python
+[
+  {"role": "system", "content": "You are a helpful AI coding agent..."},  # hidden instructions
+  {"role": "user",   "content": "What is Python?"}                       # your question
+]
+```
+
+**The key trick:** an LLM remembers nothing. The agent sends the **whole conversation** every time. Its "memory" is just this Python list, and it grows by one user message and one AI answer each turn.
 
 ## Project structure
 
