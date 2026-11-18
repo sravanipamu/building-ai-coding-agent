@@ -8,14 +8,6 @@ An AI coding agent is a program you talk to in the terminal. It uses an AI model
 questions and, in later phases, to read files, write code and run commands for you.
 Tools like Claude Code and Cursor work this way.
 
-We build it in **phases**. Each phase adds one new skill to the agent:
-
-| Phase | What we add |
-|-------|-------------|
-| **Phase 1: Foundation** (this folder) | A chat program in the terminal that talks to an AI model |
-| Phase 2: Agent loop | The agent can use a tool (run terminal commands) |
-| Phase 3: File tools | The agent can read, write and search files |
-
 The goal is to **learn how AI agents really work inside**. We use no big frameworks, so you can read every line.
 
 ---
